@@ -1,0 +1,984 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="description" content="SmartАптечка помогает хранить лекарства, отслеживать курс лечения, искать препараты по симптомам и распознавать их по фото.">
+    <meta name="theme-color" content="#4361ee">
+    <meta name="smart-aptechka-ocr-url" content="">
+    <meta name="smart-aptechka-auth-api" content="http://localhost:8787">
+    <title>SmartАптечка</title>
+    <link rel="icon" type="image/png" sizes="32x32" href="img/favicon.png">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://api-maps.yandex.ru/2.1/?lang=ru_RU" type="text/javascript"></script>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .app-background {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -2;
+            background:
+                radial-gradient(circle at 14% 18%, rgba(214, 236, 255, 0.9) 0%, rgba(214, 236, 255, 0) 40%),
+                radial-gradient(circle at 88% 12%, rgba(192, 206, 255, 0.6) 0%, rgba(192, 206, 255, 0) 38%),
+                linear-gradient(120deg, #ecf4ff 0%, #dfefff 34%, #d9e2ff 62%, #ede8ff 100%);
+            background-size: 180% 180%, 160% 160%, 220% 220%;
+            animation: auroraFlow 18s ease-in-out infinite alternate;
+            overflow: hidden;
+        }
+
+        .app-background::before,
+        .app-background::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+        }
+
+        .app-background::before {
+            background:
+                radial-gradient(circle at 70% 74%, rgba(86, 132, 255, 0.32) 0%, rgba(86, 132, 255, 0) 44%),
+                radial-gradient(circle at 18% 82%, rgba(145, 112, 255, 0.28) 0%, rgba(145, 112, 255, 0) 46%),
+                radial-gradient(circle at 48% 20%, rgba(78, 198, 255, 0.22) 0%, rgba(78, 198, 255, 0) 36%);
+            background-size: 180% 180%, 160% 160%, 190% 190%;
+            mix-blend-mode: screen;
+            opacity: 0.9;
+            animation: auroraDrift 22s ease-in-out infinite;
+        }
+
+        .app-background::after {
+            background:
+                repeating-linear-gradient(
+                    140deg,
+                    rgba(34, 79, 176, 0.06) 0px,
+                    rgba(34, 79, 176, 0.06) 1px,
+                    transparent 1px,
+                    transparent 16px
+                );
+            opacity: 0.45;
+            animation: grainShift 20s linear infinite;
+        }
+
+        .theme-dark .app-background {
+            background:
+                radial-gradient(circle at 16% 18%, rgba(47, 86, 178, 0.55) 0%, rgba(47, 86, 178, 0) 42%),
+                radial-gradient(circle at 88% 8%, rgba(89, 57, 171, 0.45) 0%, rgba(89, 57, 171, 0) 40%),
+                linear-gradient(120deg, #050a17 0%, #0b1631 34%, #181c47 60%, #24174a 100%);
+        }
+
+        .theme-dark .app-background::before {
+            opacity: 0.75;
+        }
+
+        .theme-dark .app-background::after {
+            opacity: 0.22;
+        }
+        
+        .bg-shape {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(72px);
+            opacity: 0.55;
+            z-index: -1;
+            transition: transform 0.5s ease;
+            animation: ambientGlow 10s ease-in-out infinite;
+        }
+        
+        .shape-1 {
+            width: 430px;
+            height: 430px;
+            background: radial-gradient(circle, rgba(64, 111, 255, 0.26) 0%, transparent 70%);
+            top: -140px;
+            left: -120px;
+        }
+        
+        .shape-2 {
+            width: 350px;
+            height: 350px;
+            background: radial-gradient(circle, rgba(12, 155, 201, 0.22) 0%, transparent 72%);
+            bottom: -120px;
+            right: -90px;
+        }
+
+        .theme-dark .shape-1 {
+            background: radial-gradient(circle, rgba(76, 129, 255, 0.35) 0%, transparent 72%);
+        }
+
+        .theme-dark .shape-2 {
+            background: radial-gradient(circle, rgba(137, 88, 255, 0.32) 0%, transparent 72%);
+        }
+
+        @keyframes auroraFlow {
+            0% {
+                background-position: 0% 0%, 100% 0%, 0% 50%;
+            }
+            50% {
+                background-position: 30% 70%, 70% 20%, 100% 60%;
+            }
+            100% {
+                background-position: 60% 100%, 20% 80%, 100% 0%;
+            }
+        }
+
+        @keyframes auroraDrift {
+            0% {
+                background-position: 0% 0%, 100% 100%, 50% 0%;
+            }
+            50% {
+                background-position: 100% 40%, 0% 20%, 30% 100%;
+            }
+            100% {
+                background-position: 20% 100%, 100% 40%, 80% 20%;
+            }
+        }
+
+        @keyframes grainShift {
+            0% {
+                transform: translate3d(0, 0, 0);
+            }
+            100% {
+                transform: translate3d(12px, -12px, 0);
+            }
+        }
+
+        @keyframes ambientGlow {
+            0%, 100% {
+                opacity: 0.5;
+            }
+            50% {
+                opacity: 0.7;
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .app-background,
+            .app-background::before,
+            .app-background::after,
+            .bg-shape {
+                animation: none !important;
+            }
+        }
+        
+        .ocr-container {
+            background: rgba(255, 255, 255, 0.98);
+            border-radius: 16px;
+            padding: 25px;
+            margin-top: 20px;
+            border: 1px solid rgba(0, 0, 0, 0.08);
+            box-shadow: 0 8px 32px rgba(31, 38, 135, 0.1);
+        }
+
+        .theme-dark .ocr-container {
+            background: rgba(16, 24, 44, 0.92);
+            border-color: rgba(136, 164, 255, 0.28);
+            box-shadow: 0 12px 36px rgba(0, 0, 0, 0.35);
+            color: #e8f0ff;
+        }
+        
+        .upload-area-ocr {
+            border: 2px dashed #4361ee;
+            border-radius: 16px;
+            padding: 40px 20px;
+            text-align: center;
+            cursor: pointer;
+            background: rgba(248, 249, 255, 0.5);
+            transition: all 0.3s ease;
+            margin-bottom: 20px;
+        }
+
+        .theme-dark .upload-area-ocr {
+            border-color: #7b9dff;
+            background: rgba(43, 62, 110, 0.25);
+            color: #e8f0ff;
+        }
+        
+        .upload-area-ocr:hover {
+            border-color: #3a56d4;
+            background: rgba(67, 97, 238, 0.05);
+        }
+
+        .theme-dark .upload-area-ocr:hover {
+            border-color: #9db8ff;
+            background: rgba(96, 124, 206, 0.3);
+        }
+        
+        .upload-area-ocr.dragover {
+            border-color: #4cc9f0;
+            background: rgba(76, 201, 240, 0.1);
+        }
+
+        .theme-dark .upload-area-ocr.dragover {
+            border-color: #63d4f6;
+            background: rgba(76, 201, 240, 0.2);
+        }
+        
+        .preview-image {
+            max-width: 100%;
+            max-height: 300px;
+            border-radius: 12px;
+            margin: 20px auto;
+            display: block;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        }
+        
+        .ocr-result {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 20px;
+            border-left: 4px solid #4361ee;
+            white-space: pre-wrap;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .theme-dark .ocr-result {
+            background: rgba(8, 14, 30, 0.88);
+            color: #edf4ff;
+            border-left-color: #7ea1ff;
+        }
+
+        .theme-dark #ocrFoundMedicines .card {
+            background: rgba(25, 37, 67, 0.92);
+            border-color: rgba(143, 169, 255, 0.24);
+        }
+
+        .theme-dark #ocrFoundMedicines .text-muted {
+            color: #b7c9eb !important;
+        }
+        
+        .spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(67, 97, 238, 0.1);
+            border-radius: 50%;
+            border-top-color: #4361ee;
+            animation: spin 1s ease-in-out infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .page-wrapper {
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+        
+        .content-wrapper {
+            flex: 1;
+            padding-bottom: 80px;
+        }
+        
+        @keyframes slideOut {
+            from {
+                opacity: 1;
+                transform: translateX(0);
+            }
+            to {
+                opacity: 0;
+                transform: translateX(-100%);
+            }
+        }
+        
+        .medicine-card.removing {
+            animation: slideOut 0.3s ease-out forwards;
+        }
+        
+        /* Стили для модальных окон регистрации/входа */
+        .auth-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(10, 14, 28, 0.58);
+            backdrop-filter: blur(10px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+        }
+        
+        .auth-modal.hidden {
+            display: none;
+        }
+        
+        .auth-form {
+            background: rgba(255, 255, 255, 0.96);
+            padding: 30px;
+            border-radius: 24px;
+            width: 90%;
+            max-width: 400px;
+            border: 1px solid rgba(255, 255, 255, 0.55);
+            box-shadow: 0 24px 60px rgba(15, 23, 42, 0.18);
+        }
+        
+        .auth-tabs {
+            display: flex;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+        
+        .auth-tab {
+            flex: 1;
+            padding: 10px;
+            text-align: center;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+        
+        .auth-tab.active {
+            border-bottom: 3px solid #4361ee;
+            color: #4361ee;
+        }
+        
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #4361ee, #7209b7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        
+        .profile-section {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 16px;
+            padding: 25px;
+            margin-top: 20px;
+            box-shadow: 0 8px 32px rgba(31, 38, 135, 0.1);
+        }
+        
+        .user-header {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+        
+        .user-avatar-large {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #4361ee, #7209b7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 32px;
+            font-weight: bold;
+        }
+        
+        .user-info {
+            flex: 1;
+        }
+        
+        .user-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            border: 1px solid #e2e8f0;
+            transition: all 0.3s ease;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+        }
+        
+        .stat-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 12px;
+            background: rgba(67, 97, 238, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 15px;
+            color: #4361ee;
+            font-size: 24px;
+        }
+        
+        .health-progress {
+            margin: 30px 0;
+        }
+        
+        .progress-item {
+            margin-bottom: 15px;
+        }
+        
+        .progress-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+            font-size: 14px;
+        }
+        
+        .achievements {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .achievement {
+            background: white;
+            padding: 15px;
+            border-radius: 12px;
+            text-align: center;
+            border: 1px solid #e2e8f0;
+        }
+        
+        .achievement-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: #f8f9fa;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 10px;
+            font-size: 24px;
+        }
+        
+        .achievement.active .achievement-icon {
+            background: linear-gradient(135deg, #4361ee, #7209b7);
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <a class="skip-link" href="#content">Перейти к основному контенту</a>
+    <div id="srAnnouncements" class="sr-live-region" aria-live="polite" aria-atomic="true"></div>
+
+    <div class="app-background"></div>
+    <div class="bg-shape shape-1"></div>
+    <div class="bg-shape shape-2"></div>
+    
+    <!-- Модальное окно авторизации -->
+    <div id="authModal" class="auth-modal hidden">
+        <div class="auth-form">
+            <div class="auth-tabs">
+                <div class="auth-tab active" id="loginTab">Вход</div>
+                <div class="auth-tab" id="registerTab">Регистрация</div>
+            </div>
+            
+            <div id="loginForm" class="auth-form-content">
+                <div class="mb-3">
+                    <label class="form-label">Email</label>
+                    <input type="email" class="form-control" id="loginEmail" placeholder="Ваш email">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Пароль</label>
+                    <div class="input-group password-input-group">
+                        <input type="password" class="form-control" id="loginPassword" placeholder="Ваш пароль">
+                        <button
+                            class="btn btn-outline-secondary password-toggle-btn"
+                            type="button"
+                            onclick="togglePasswordVisibility('loginPassword', this)"
+                            aria-label="Показать пароль"
+                            title="Показать пароль">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
+                </div>
+                <button class="btn btn-primary w-100" onclick="login()">Войти</button>
+                <div id="loginError" class="text-danger mt-2 small" style="display: none;"></div>
+            </div>
+            
+            <div id="registerForm" class="auth-form-content" style="display: none;">
+                <div class="mb-3">
+                    <label class="form-label">Никнейм</label>
+                    <input type="text" class="form-control" id="registerName" placeholder="Ваш никнейм (3-20 символов)">
+                    <div class="form-text">Можно: буквы, цифры, точка, дефис и подчёркивание.</div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Email</label>
+                    <input type="email" class="form-control" id="registerEmail" placeholder="Ваш email">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Пароль</label>
+                    <div class="input-group password-input-group">
+                        <input type="password" class="form-control" id="registerPassword" placeholder="От 10 символов: буквы, цифра и спецсимвол">
+                        <button
+                            class="btn btn-outline-secondary password-toggle-btn"
+                            type="button"
+                            onclick="togglePasswordVisibility('registerPassword', this)"
+                            aria-label="Показать пароль"
+                            title="Показать пароль">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Подтвердите пароль</label>
+                    <div class="input-group password-input-group">
+                        <input type="password" class="form-control" id="registerConfirmPassword" placeholder="Повторите пароль">
+                        <button
+                            class="btn btn-outline-secondary password-toggle-btn"
+                            type="button"
+                            onclick="togglePasswordVisibility('registerConfirmPassword', this)"
+                            aria-label="Показать пароль"
+                            title="Показать пароль">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="small text-muted mb-3">Пароль должен быть не короче 10 символов и содержать заглавную, строчную букву, цифру и специальный символ.</div>
+                <button id="registerSubmitButton" class="btn btn-success w-100" onclick="register()">Зарегистрироваться</button>
+                <div id="registerError" class="text-danger mt-2 small" style="display: none;"></div>
+                <div class="mb-3 form-check">
+                    <input type="checkbox" class="form-check-input" id="privacyCheckbox" required>
+                    <label class="form-check-label" for="privacyCheckbox">
+                        Я соглашаюсь с 
+                        <a href="javascript:void(0);" onclick="showPrivacyModal()" class="text-decoration-none">
+                            политикой конфиденциальности
+                        </a>
+                    </label>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="page-wrapper">
+
+        <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom py-3">
+            <div class="container-fluid">
+                <a class="navbar-brand brand-block d-flex align-items-center" href="#" onclick="showSection('medicines'); return false;">
+                    <div class="logo-icon me-3">
+                        <i class="fas fa-microscope"></i>
+                    </div>
+                    <div class="logo-text-wrap">
+                        <span class="logo-text">SmartАптечка</span>
+                        <small class="logo-subtitle">умная домашняя аптечка</small>
+                    </div>
+                </a>
+                
+                <!-- правая часть навигации -->
+                <div class="d-none d-lg-flex align-items-center gap-2">
+                    <button class="btn btn-outline-primary btn-nav" onclick="showSection('medicines', event)">
+                        <i class="fas fa-pills me-2"></i>
+                        <span class="d-none d-xl-inline">Мои лекарства</span>
+                        <span class="badge bg-primary ms-1" id="meds-count">0</span>
+                    </button>
+                    <button class="btn btn-outline-primary btn-nav" onclick="showSection('search', event)">
+                        <i class="fas fa-search me-2"></i>
+                        <span class="d-none d-xl-inline">Поиск</span>
+                    </button>
+                    <button class="btn btn-success btn-nav" onclick="showSection('add', event)">
+                        <i class="fas fa-plus me-2"></i>
+                        <span class="d-none d-xl-inline">Добавить</span>
+                    </button>
+                    <button class="btn btn-outline-dark btn-nav accessibility-toggle-btn" data-accessibility-toggle="desktop" onclick="toggleAccessibilityMode()" aria-pressed="false">
+                        <i class="fas fa-universal-access accessibility-toggle-icon me-2"></i>
+                        <span class="d-none d-xl-inline accessibility-toggle-label">Режим слабовидящих</span>
+                    </button>
+                    
+                    <!-- аватар пользователя или кнопка входа -->
+                    <div id="userNavSection">
+                        <div id="userAvatar" class="user-avatar ms-2" onclick="showSection('profile', event)" style="display: none;">
+                            <span id="avatarInitials"></span>
+                        </div>
+                        <button id="loginButton" class="btn btn-outline-primary btn-nav ms-2" onclick="showAuthModal()">
+                            <i class="fas fa-sign-in-alt me-2"></i>
+                            <span class="d-none d-xl-inline">Войти</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </nav>
+
+        <div class="content-wrapper">
+            <div class="container-fluid mt-3">
+                <div class="row justify-content-center">
+                    <div class="col-lg-11 col-xl-10 col-12">
+                        <div class="quick-actions mb-4">
+                            <div class="row g-3">
+                                <div class="col-auto">
+                                    <button class="btn btn-outline-warning btn-action" onclick="showSection('ocr', event)">
+                                        <i class="fas fa-camera me-2"></i>Поиск по фото
+                                    </button>
+                                </div>
+                                <div class="col-auto">
+                                    <button class="btn btn-outline-info btn-action" onclick="showSection('map', event)">
+                                        <i class="fas fa-map-marker-alt me-2"></i>Карта аптек
+                                    </button>
+                                </div>
+                                <div class="col-auto">
+                                    <button class="btn btn-outline-secondary btn-action" onclick="showSection('profile', event)">
+                                        <i class="fas fa-user me-2"></i>Профиль
+                                    </button>
+                                </div>
+                                <div class="col-auto">
+                                    <button class="btn btn-outline-primary btn-action" onclick="speakCurrentSection()">
+                                        <i class="fas fa-volume-high me-2"></i>Озвучить экран
+                                    </button>
+                                </div>
+                                <div class="col-auto">
+                                    <button class="btn btn-outline-danger btn-action" onclick="stopSpeechNarration()">
+                                        <i class="fas fa-stop me-2"></i>Стоп озвучки
+                                    </button>
+                                </div>
+                                <div class="col-auto d-lg-none">
+                                    <button class="btn btn-outline-dark btn-action accessibility-toggle-btn" data-accessibility-toggle="mobile" onclick="toggleAccessibilityMode()" aria-pressed="false">
+                                        <i class="fas fa-universal-access accessibility-toggle-icon me-2"></i>
+                                        <span class="accessibility-toggle-label">Режим слабовидящих</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div id="content" class="content-card" role="main" tabindex="-1" aria-label="Основной контент">
+                            <!-- контент будет загружен динамически -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <footer class="footer app-footer py-4">
+            <div class="container">
+                <div class="footer-panel">
+                    <div class="row g-4">
+                        <div class="col-lg-5">
+                            <div class="footer-brand">
+                                <span class="footer-brand__icon"><i class="fas fa-microscope"></i></span>
+                                <div>
+                                    <h5 class="footer-brand__title mb-1">SmartАптечка</h5>
+                                    <p class="footer-brand__subtitle mb-0">умная домашняя аптечка для контроля приёма лекарств</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-sm-6 col-lg-4">
+                            <h6 class="footer-title">Контакты по вопросам</h6>
+                            <a class="footer-contact-link" href="mailto:robouteguiliman@yandex.ru">
+                                <i class="fas fa-envelope"></i>
+                                <span>robouteguiliman@yandex.ru</span>
+                            </a>
+                            <a class="footer-contact-link" href="tel:+79017192446">
+                                <i class="fas fa-phone"></i>
+                                <span>+7 901 719-24-46</span>
+                            </a>
+                        </div>
+                        <div class="col-sm-6 col-lg-3">
+                            <h6 class="footer-title">Важно</h6>
+                            <p class="footer-note mb-2">
+                                Сервис не заменяет врача. Все подсказки носят справочный характер.
+                            </p>
+                            <button class="btn btn-sm btn-outline-primary" onclick="showPrivacyModal()">
+                                <i class="fas fa-shield-alt me-1"></i>Политика конфиденциальности
+                            </button>
+                        </div>
+                    </div>
+                    <div class="footer-bottom">
+                        <span>SmartАптечка • школьный проект Кашиева Инала и Никиты Михопарова</span>
+                        <span class="footer-dot">•</span>
+                        <span><script>document.write(new Date().getFullYear())</script></span>
+                    </div>
+                </div>
+            </div>
+        </footer>
+
+        <nav class="navbar navbar-light fixed-bottom d-lg-none mobile-navbar">
+            <div class="container-fluid">
+                <div class="row w-100 g-0">
+                    <div class="col text-center">
+                        <button class="btn btn-link text-decoration-none nav-btn" onclick="showSection('medicines', event)">
+                            <i class="fas fa-pills fa-lg"></i>
+                            <div class="small">Лекарства</div>
+                        </button>
+                    </div>
+                    <div class="col text-center">
+                        <button class="btn btn-link text-decoration-none nav-btn" onclick="showSection('search', event)">
+                            <i class="fas fa-search fa-lg"></i>
+                            <div class="small">Поиск</div>
+                        </button>
+                    </div>
+                    <div class="col text-center">
+                        <button class="btn btn-link text-decoration-none nav-btn" onclick="showSection('add', event)">
+                            <i class="fas fa-plus-circle fa-lg text-success"></i>
+                            <div class="small">Добавить</div>
+                        </button>
+                    </div>
+                    <div class="col text-center">
+                        <button class="btn btn-link text-decoration-none nav-btn" onclick="showSection('ocr', event)">
+                            <i class="fas fa-camera fa-lg"></i>
+                            <div class="small">Поиск по фото</div>
+                        </button>
+                    </div>
+                    <div class="col text-center">
+                        <button class="btn btn-link text-decoration-none nav-btn" onclick="showSection('profile', event)">
+                            <i class="fas fa-user fa-lg"></i>
+                            <div class="small">Профиль</div>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </nav>
+    </div>
+
+<script src="js/meds-database.js"></script>
+<script src="js/medicine-safety.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js" defer></script>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.12.7/dist/gsap.min.js"></script>
+<script src="js/script.js"></script>
+<script src="js/ocr.js"></script>
+<script src="js/background-simple.js"></script>
+<script src="js/auth.js"></script>
+    <script src="js/app-init.js"></script>
+    <div id="privacyModal" class="auth-modal hidden">
+    <div class="auth-form" style="max-width: 600px; max-height: 80vh; overflow-y: auto;">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h4 class="mb-0"><i class="fas fa-shield-alt me-2"></i>Политика конфиденциальности</h4>
+            <button type="button" class="btn-close" onclick="hidePrivacyModal()"></button>
+        </div>
+        
+        <div class="privacy-content">
+            <h5>1. Что делает сервис</h5>
+            <p class="text-muted">SmartАптечка помогает вести домашнюю аптечку, хранить локальные записи о препаратах и показывать базовые автоматические предупреждения. Сервис не является медицинской организацией и не заменяет врача.</p>
+
+            <h5 class="mt-4">2. Какие данные сохраняются</h5>
+            <p class="text-muted">Приложение сохраняет только данные, нужные для работы интерфейса:</p>
+            <ul class="text-muted">
+                <li>Имя пользователя (для персонализации)</li>
+                <li>Email адрес (для идентификации аккаунта)</li>
+                <li>Информацию о лекарствах и приёмах (хранится локально)</li>
+                <li>Настройки темы, аватар и локальный пароль</li>
+            </ul>
+            
+            <h5 class="mt-4">3. Где хранятся данные</h5>
+            <p class="text-muted">Основные данные хранятся локально в вашем браузере (localStorage).
+            Если для OCR подключён внешний сервер распознавания, изображение может быть отправлено только для обработки текста.</p>
+            
+            <h5 class="mt-4">4. Безопасность и ограничения</h5>
+            <p class="text-muted">Мы используем стандартные механизмы безопасности браузера, но локальное хранение не делает данные медицинской тайной в юридическом смысле. Не используйте сервис на общедоступных компьютерах и не храните здесь критически важные медицинские решения без дублирования в надёжном месте.</p>
+            
+            <h5 class="mt-4">5. Медицинский дисклеймер</h5>
+            <p class="text-muted">Поиск по симптомам, группам препаратов и предупреждения о сочетаниях работают по упрощённым правилам и НЕ являются лечебной рекомендацией. Перед применением препаратов обязательно проконсультируйтесь с врачом или фармацевтом.</p>
+            
+            <h5 class="mt-4">6. Удаление данных</h5>
+            <p class="text-muted">Вы можете удалить данные профиля и аптечки в любой момент через настройки профиля или очисткой данных браузера.</p>
+
+            <h5 class="mt-4">7. Контакт и статус проекта</h5>
+            <p class="text-muted">Это школьный проект учеников 10 "Б" класса ГБОУ школы №1368.
+                Если вы нашли ошибку или хотите предложить улучшение, свяжитесь с авторами проекта.
+            </p>
+            
+            <div class="alert alert-info mt-4">
+                <i class="fas fa-info-circle me-2"></i>
+                Это учебный проект. Любые подсказки внутри сервиса нужно воспринимать как вспомогательные, а не как назначение лечения.
+            </div>
+        </div>
+        
+        <div class="mt-4 text-center">
+            <button class="btn btn-primary" onclick="hidePrivacyModal()">
+                <i class="fas fa-check me-1"></i>Понятно
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- модальное окно для загрузки аватара -->
+<div id="avatarModal" class="auth-modal hidden">
+    <div class="auth-form">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h4 class="mb-0"><i class="fas fa-user-circle me-2"></i>Сменить аватар</h4>
+            <button type="button" class="btn-close" onclick="hideAvatarModal()"></button>
+        </div>
+        
+        <div class="text-center mb-4">
+            <div class="user-avatar-large mb-3 mx-auto" id="currentAvatarPreview" style="cursor: pointer;" onclick="document.getElementById('avatarInput').click()">
+                <span id="avatarPreviewText">JD</span>
+            </div>
+            <input type="file" id="avatarInput" accept="image/*" style="display: none;">
+            <p class="text-muted small">Нажмите на аватар для выбора файла (до 10 МБ)</p>
+        </div>
+        
+        <div class="mb-4">
+            <h6>Или выберите цвет:</h6>
+            <div class="d-flex flex-wrap gap-2" id="colorPicker">
+                <div class="color-option" data-color="#4361ee" style="background: #4361ee;"></div>
+                <div class="color-option" data-color="#7209b7" style="background: #7209b7;"></div>
+                <div class="color-option" data-color="#4cc9f0" style="background: #4cc9f0;"></div>
+                <div class="color-option" data-color="#06d6a0" style="background: #06d6a0;"></div>
+                <div class="color-option" data-color="#ffd166" style="background: #ffd166;"></div>
+                <div class="color-option" data-color="#ef476f" style="background: #ef476f;"></div>
+            </div>
+        </div>
+        
+        <div class="d-flex gap-2">
+            <button class="btn btn-outline-secondary flex-grow-1" onclick="hideAvatarModal()">
+                Отмена
+            </button>
+            <button class="btn btn-outline-danger flex-grow-1" onclick="removeAvatar()">
+                Убрать аватар
+            </button>
+            <button class="btn btn-success flex-grow-1" onclick="saveAvatar()">
+                Сохранить
+            </button>
+        </div>
+    </div>
+</div>
+
+<div id="passwordModal" class="auth-modal hidden">
+    <div class="auth-form auth-form-wide">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h4 class="mb-1"><i class="fas fa-lock me-2"></i>Сменить пароль</h4>
+                <p class="text-muted small mb-0">Обновите пароль для локального профиля SmartАптечки</p>
+            </div>
+            <button type="button" class="btn-close" onclick="hideChangePasswordModal()"></button>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Текущий пароль</label>
+            <div class="input-group password-input-group">
+                <input type="password" class="form-control" id="currentPasswordInput" placeholder="Введите текущий пароль">
+                <button
+                    class="btn btn-outline-secondary password-toggle-btn"
+                    type="button"
+                    onclick="togglePasswordVisibility('currentPasswordInput', this)"
+                    aria-label="Показать пароль"
+                    title="Показать пароль">
+                    <i class="fas fa-eye"></i>
+                </button>
+            </div>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Новый пароль</label>
+            <div class="input-group password-input-group">
+                <input type="password" class="form-control" id="newPasswordInput" placeholder="От 10 символов: буквы, цифра и спецсимвол">
+                <button
+                    class="btn btn-outline-secondary password-toggle-btn"
+                    type="button"
+                    onclick="togglePasswordVisibility('newPasswordInput', this)"
+                    aria-label="Показать пароль"
+                    title="Показать пароль">
+                    <i class="fas fa-eye"></i>
+                </button>
+            </div>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Подтверждение нового пароля</label>
+            <div class="input-group password-input-group">
+                <input type="password" class="form-control" id="confirmPasswordInput" placeholder="Повторите новый пароль">
+                <button
+                    class="btn btn-outline-secondary password-toggle-btn"
+                    type="button"
+                    onclick="togglePasswordVisibility('confirmPasswordInput', this)"
+                    aria-label="Показать пароль"
+                    title="Показать пароль">
+                    <i class="fas fa-eye"></i>
+                </button>
+            </div>
+        </div>
+
+        <div id="changePasswordError" class="text-danger small mb-3" style="display: none;"></div>
+
+        <div class="auth-modal-note">
+            <i class="fas fa-shield-heart me-2"></i>
+            Пароль хранится локально в браузере и нужен для доступа к вашему профилю на этом устройстве.
+        </div>
+
+        <div class="d-flex gap-2 mt-4">
+            <button class="btn btn-outline-secondary flex-grow-1" onclick="hideChangePasswordModal()">
+                Отмена
+            </button>
+            <button class="btn btn-primary flex-grow-1" onclick="submitPasswordChange()">
+                Сохранить пароль
+            </button>
+        </div>
+    </div>
+</div>
+
+<style>
+    .color-option {
+        width: 40px;
+        height: 40px;
+        border-radius: 8px;
+        cursor: pointer;
+        border: 3px solid transparent;
+        transition: all 0.2s ease;
+    }
+    
+    .color-option:hover {
+        transform: scale(1.1);
+    }
+    
+    .color-option.selected {
+        border-color: white;
+        box-shadow: 0 0 0 2px #4361ee;
+    }
+    
+    .privacy-content {
+        line-height: 1.6;
+    }
+    
+    .privacy-content h5 {
+        color: #4361ee;
+        margin-top: 20px;
+    }
+    
+    .user-avatar-large {
+        transition: all 0.3s ease;
+    }
+    
+    .user-avatar-large:hover {
+        transform: scale(1.05);
+        box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+    }
+    
+    .avatar-preview {
+        width: 100%;
+        height: 100%;
+        border-radius: 50%;
+        object-fit: cover;
+    }
+
+    .auth-form-wide {
+        max-width: 520px;
+    }
+
+    .auth-modal-note {
+        padding: 12px 14px;
+        border-radius: 12px;
+        background: rgba(67, 97, 238, 0.08);
+        color: #324467;
+        font-size: 0.92rem;
+        line-height: 1.5;
+    }
+
+    .password-toggle-btn {
+        min-width: 46px;
+    }
+
+    .password-toggle-btn i {
+        pointer-events: none;
+    }
+</style>
+</body>
+</html>

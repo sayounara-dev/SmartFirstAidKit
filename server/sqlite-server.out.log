@@ -1,0 +1,6 @@
+
+> smart-aptechka-auth-mail-server@1.0.0 sqlite-server
+> node server/server.js
+
+[sqlite-server] started on http://localhost:8787
+[sqlite-server] DB: C:\Users\mihop\Videos\aptechka_project v2.2 FAMILY GROUP\server\database.sqlite

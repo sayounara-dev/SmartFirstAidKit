@@ -1,0 +1,57 @@
+
+> smart-aptechka-auth-mail-server@1.0.0 auth-server
+> node server/auth-mail-server.js
+
+[auth-mail-server] started on http://localhost:8787
+[auth-mail-server] SMTP: configured
+[auth-mail-server] SMTP verify: OK
+[auth-mail-server] sendMail success: {
+  envelope: {
+    from: 'mihoparovnikita260@gmail.com',
+    to: [ 'mihoparovnikita260@gmail.com' ]
+  },
+  accepted: [ 'mihoparovnikita260@gmail.com' ],
+  rejected: [],
+  response: '250 2.0.0 OK  1776531895 38308e7fff4ca-38ecb716751sm13256801fa.29 - gsmtp',
+  messageId: '<3a7a18bf-4398-8444-8a51-f1a016bc3e34@gmail.com>'
+}
+[auth-mail-server] sendMail success: {
+  envelope: {
+    from: 'mihoparovnikita260@gmail.com',
+    to: [ 'regentimperial@gmail.com' ]
+  },
+  accepted: [ 'regentimperial@gmail.com' ],
+  rejected: [],
+  response: '250 2.0.0 OK  1776531951 2adb3069b0e04-5a418376d0asm1488712e87.0 - gsmtp',
+  messageId: '<b9ae44a9-dc57-8b54-93a9-940fba9d64ed@gmail.com>'
+}
+[auth-mail-server] sendMail success: {
+  envelope: {
+    from: 'mihoparovnikita260@gmail.com',
+    to: [ 'mihoparovnikita258@gmail.com' ]
+  },
+  accepted: [ 'mihoparovnikita258@gmail.com' ],
+  rejected: [],
+  response: '250 2.0.0 OK  1776532007 2adb3069b0e04-5a41a238563sm1295915e87.55 - gsmtp',
+  messageId: '<885b6d38-24e3-4105-e02c-ab96d255d4d2@gmail.com>'
+}
+[auth-mail-server] sendMail success: {
+  envelope: {
+    from: 'mihoparovnikita260@gmail.com',
+    to: [ 'mihoparovnikita257@gmail.com' ]
+  },
+  accepted: [ 'mihoparovnikita257@gmail.com' ],
+  rejected: [],
+  response: '250 2.0.0 OK  1776532089 2adb3069b0e04-5a4187e7dd0sm1456572e87.69 - gsmtp',
+  messageId: '<0fedc86f-1973-853a-a626-650bf39d7d5a@gmail.com>'
+}
+[auth-mail-server] sendMail success: {
+  envelope: {
+    from: 'mihoparovnikita260@gmail.com',
+    to: [ 'mihoparovnikita260@gmail.com' ]
+  },
+  accepted: [ 'mihoparovnikita260@gmail.com' ],
+  rejected: [],
+  response: '250 2.0.0 OK  1776534335 2adb3069b0e04-5a4185ad30asm1519077e87.16 - gsmtp',
+  messageId: '<b8233205-33a7-6379-4040-7d73b84bbf5f@gmail.com>'
+}

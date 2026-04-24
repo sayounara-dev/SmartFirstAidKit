@@ -1,0 +1,38 @@
+{
+    "name": "smart-aptechka-auth-mail-server",
+    "version": "1.0.0",
+    "private": true,
+    "description": "Minimal email verification backend for SmartАптечка registration",
+    "scripts": {
+        "auth-server": "node server/auth-mail-server.js",
+        "sqlite-server": "node server/server.js",
+        "lint": "eslint .",
+        "lint:fix": "eslint . --fix",
+        "format": "prettier --write package.json .lintstagedrc.json .prettierrc.json eslint.config.js vitest.config.mjs server/**/*.js server/**/*.md scripts/**/*.cjs tests/**/*.mjs js/app-init.js",
+        "format:check": "prettier --check package.json .lintstagedrc.json .prettierrc.json eslint.config.js vitest.config.mjs server/**/*.js server/**/*.md scripts/**/*.cjs tests/**/*.mjs js/app-init.js",
+        "test": "vitest run",
+        "test:watch": "vitest",
+        "prepare": "node scripts/prepare-husky.cjs",
+        "audit": "npm audit --omit=dev --audit-level=moderate"
+    },
+    "dependencies": {
+        "dotenv": "^16.6.1",
+        "express": "^4.21.2",
+        "express-rate-limit": "^8.3.1",
+        "helmet": "^8.1.0",
+        "jsonwebtoken": "^9.0.2",
+        "nodemailer": "^6.10.1",
+        "sqlite": "^5.1.1",
+        "sqlite3": "^5.1.7"
+    },
+    "devDependencies": {
+        "@eslint/js": "^10.0.1",
+        "eslint": "^10.0.3",
+        "globals": "^17.4.0",
+        "husky": "^9.1.7",
+        "jsdom": "^29.0.0",
+        "lint-staged": "^16.4.0",
+        "prettier": "^3.8.1",
+        "vitest": "^4.1.0"
+    }
+}
